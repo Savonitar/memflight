@@ -1,0 +1,25 @@
+/bin/
+/memflight-data/
+# Exclude generated recordings from ordinary staging with any --output directory.
+incident-*/
+.writer.lock
+
+# Local build, profiling and editor artifacts.
+/memflight
+/memflight.exe
+*.test
+*.test.exe
+coverage*.out
+*.prof
+*.pprof
+.DS_Store
+
+# Defense against accidental staging; these patterns are not a secret scanner.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore

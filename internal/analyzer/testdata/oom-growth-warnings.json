@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "sample_count": 5,
+  "analyzed_sample_count": 5,
+  "analysis_windows": 1,
+  "truncated": false,
+  "findings": [
+    {
+      "code": "observed_oom_counter_increase",
+      "pattern": "Observed OOM-kill counter increase",
+      "confidence": "high",
+      "evidence": [
+        "cgroup.memory.events.local.oom_kill increased by 1 across 1 adjacent sample pairs.",
+        "This records OOM victims in the counter's scope, not proof that the target was killed or that this cgroup's memory.max caused the kill."
+      ],
+      "suggested_next_check": "Correlate the target's exit status with kernel or provider evidence to establish the victim and the applicable memory limit."
+    },
+    {
+      "code": "gradual_anonymous_growth",
+      "pattern": "Probable gradual anonymous-memory growth",
+      "confidence": "medium",
+      "evidence": [
+        "cgroup.memory.stat.anon rose from 33554432 bytes (32.00 MiB) to 134217728 bytes (128.00 MiB) (increase 100663296 bytes (96.00 MiB)) over 15.000 seconds.",
+        "At least three sampled increases occurred; no single increase accounts for most of the net growth.",
+        "proc.status.RssAnon rose from 31457280 bytes (30.00 MiB) to 132120576 bytes (126.00 MiB) (increase 100663296 bytes (96.00 MiB)) over 15.000 seconds."
+      ],
+      "suggested_next_check": "Compare runtime heap metrics with process anonymous RSS in a controlled reproduction; anonymous memory alone cannot identify a leak or allocator."
+    },
+    {
+      "code": "high_cgroup_memory_usage",
+      "pattern": "Observed high cgroup memory usage",
+      "confidence": "high",
+      "evidence": [
+        "A sample recorded cgroup.memory.current at 251658240 bytes (240.00 MiB) against cgroup.memory.max of 268435456 bytes (256.00 MiB) (93.8%).",
+        "The ratio uses physical cgroup memory only; swap is excluded from the denominator."
+      ],
+      "suggested_next_check": "Check the effective ancestor and VM limits as well as this cgroup's memory.max."
+    },
+    {
+      "code": "exit_cause_unresolved",
+      "pattern": "Exit cause unresolved",
+      "confidence": "low",
+      "evidence": [
+        "The recorder observed that the target disappeared.",
+        "A recording ending or a target disappearing does not establish its exit cause, even if a cgroup OOM counter also increased."
+      ],
+      "suggested_next_check": "Correlate the target's exit status with kernel or provider evidence."
+    }
+  ],
+  "collection_warnings": [
+    {
+      "code": "cgroup_ancestor_limits_not_evaluated",
+      "message": "Ancestor cgroup limits were not evaluated; leaf memory utilization does not establish effective headroom.",
+      "sample_count": 5,
+      "metadata": false
+    },
+    {
+      "code": "cgroup_oom_does_not_identify_target_victim",
+      "message": "A cgroup OOM counter does not identify the target as the victim or establish which memory limit caused the kill.",
+      "sample_count": 0,
+      "metadata": true
+    },
+    {
+      "code": "partial_final_line_ignored",
+      "message": "An incomplete final sample line was ignored; the tail of the incident may be missing.",
+      "sample_count": 0,
+      "metadata": true
+    },
+    {
+      "code": "proc_smaps_rollup_permission_denied",
+      "message": "Target process smaps_rollup metrics could not be read because permission was denied.",
+      "sample_count": 5,
+      "metadata": false
+    },
+    {
+      "code": "sampling_can_miss_short_spikes",
+      "message": "Sampling can miss peaks shorter than the sampling interval.",
+      "sample_count": 0,
+      "metadata": true
+    },
+    {
+      "code": "target_exited_state",
+      "message": "The target was observed in an exited or zombie state; process collection stopped for that observation.",
+      "sample_count": 1,
+      "metadata": false
+    }
+  ],
+  "limitations": [
+    "Sampling can miss short peaks and cannot identify individual allocations or request counts.",
+    "Confidence is a deterministic evidence heuristic, not a calibrated probability.",
+    "Unchanged or unavailable OOM counters do not rule out a kill after the final sample.",
+    "Memory and process growth trends use only samples before the first observation marking the target absent; cgroup OOM-counter and utilization evidence can continue after disappearance. Memory released at target exit is not classified as workload recovery."
+  ]
+}
