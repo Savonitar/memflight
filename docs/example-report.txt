@@ -1,0 +1,53 @@
+Memflight report (schema 1)
+Samples: 66
+Analyzed samples: 66
+Analysis windows: 1
+Truncated: false
+
+Pattern: Observed OOM-kill counter increase
+Confidence: high
+Evidence:
+- cgroup.memory.events.local.oom_kill increased by 1 across 1 adjacent sample pairs.
+- This records OOM victims in the counter's scope, not proof that the target was killed or that this cgroup's memory.max caused the kill.
+Suggested next check: Correlate the target's exit status with kernel or provider evidence to establish the victim and the applicable memory limit.
+
+Pattern: Probable gradual anonymous-memory growth
+Confidence: medium
+Evidence:
+- cgroup.memory.stat.anon rose from 4661248 bytes (4.45 MiB) to 264589312 bytes (252.33 MiB) (increase 259928064 bytes (247.89 MiB)) over 12.479 seconds.
+- At least three sampled increases occurred; no single increase accounts for most of the net growth.
+- proc.status.RssAnon rose from 36864 bytes (0.04 MiB) to 254967808 bytes (243.16 MiB) (increase 254930944 bytes (243.12 MiB)) over 12.479 seconds.
+Suggested next check: Compare runtime heap metrics with process anonymous RSS in a controlled reproduction; anonymous memory alone cannot identify a leak or allocator.
+
+Pattern: Observed high cgroup memory usage
+Confidence: high
+Evidence:
+- A sample recorded cgroup.memory.current at 268402688 bytes (255.97 MiB) against cgroup.memory.max of 268435456 bytes (256.00 MiB) (100.0%).
+- The ratio uses physical cgroup memory only; swap is excluded from the denominator.
+Suggested next check: Check the effective ancestor and VM limits as well as this cgroup's memory.max.
+
+Pattern: Observed thread-count growth
+Confidence: high
+Evidence:
+- proc.status.Threads rose from 1 to 7 (increase 6) over 12.479 seconds.
+Suggested next check: Inspect runtime thread-pool behavior during the same workload.
+
+Pattern: Exit cause unresolved
+Confidence: low
+Evidence:
+- The recorder observed that the target disappeared.
+- A recording ending or a target disappearing does not establish its exit cause, even if a cgroup OOM counter also increased.
+Suggested next check: Correlate the target's exit status with kernel or provider evidence.
+
+Collection warnings:
+- buffered_disk_writes_may_be_lost_on_machine_failure (samples: 0; metadata: true): Buffered sample writes may be lost if the machine fails before persistence completes.
+- cgroup_ancestor_limits_may_be_hidden (samples: 65; metadata: false): Cgroup namespaces may hide ancestor limits; the visible leaf limit may differ from the effective memory constraint.
+- cgroup_oom_does_not_identify_target_victim (samples: 0; metadata: true): A cgroup OOM counter does not identify the target as the victim or establish which memory limit caused the kill.
+- sampling_can_miss_short_spikes (samples: 0; metadata: true): Sampling can miss peaks shorter than the sampling interval.
+- target_missing (samples: 1; metadata: false): The configured target was absent during collection.
+
+Limitations:
+- Sampling can miss short peaks and cannot identify individual allocations or request counts.
+- Confidence is a deterministic evidence heuristic, not a calibrated probability.
+- Unchanged or unavailable OOM counters do not rule out a kill after the final sample.
+- Memory and process growth trends use only samples before the first observation marking the target absent; cgroup OOM-counter and utilization evidence can continue after disappearance. Memory released at target exit is not classified as workload recovery.

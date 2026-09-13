@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "sample_count": 0,
+  "analyzed_sample_count": 0,
+  "analysis_windows": 0,
+  "truncated": false,
+  "findings": [
+    {
+      "code": "insufficient_evidence",
+      "pattern": "Insufficient evidence for a supported pattern",
+      "confidence": "low",
+      "evidence": [
+        "Analyzed 0 of 0 recorded samples; no supported pattern met the conservative evidence thresholds within that coverage."
+      ],
+      "suggested_next_check": "Collect a longer recording with stable target identity and available numeric metrics."
+    }
+  ],
+  "collection_warnings": [],
+  "limitations": [
+    "Sampling can miss short peaks and cannot identify individual allocations or request counts.",
+    "Confidence is a deterministic evidence heuristic, not a calibrated probability.",
+    "Unchanged or unavailable OOM counters do not rule out a kill after the final sample."
+  ]
+}
